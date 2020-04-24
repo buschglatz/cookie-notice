@@ -7,10 +7,10 @@
 	letter-spacing: 0;
 	line-height: 20px;
 	left: 0;
-	text-align: center;
 	/* border-top: 2px solid #fbb03b; */
 	font-weight: normal;
 	font-family: -apple-system,BlinkMacSystemFont,Arial,Roboto,"Helvetica Neue",sans-serif;
+    box-shadow: 0px 0px 10px #0000001A;
 }
 
 #cookie-notice,
@@ -58,7 +58,6 @@
 
 .cookie-notice-container {
 	padding: 15px 30px;
-	text-align: center;
 	width: 100%;
 	z-index: 2;
 }

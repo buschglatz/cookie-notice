@@ -42,7 +42,9 @@ class Cookie_Notice {
 			'message_text'			=> '',
 			'css_style'				=> 'bootstrap',
 			'css_class'				=> '',
+            'close_style'           => '',
 			'accept_text'			=> '',
+			'accept_text_position'	=> 'banner',
 			'refuse_text'			=> '',
 			'refuse_opt'			=> false,
 			'refuse_code'			=> '',
@@ -538,7 +540,25 @@ class Cookie_Notice {
 		add_shortcode( 'cookies_accepted', array( $this, 'cookies_accepted_shortcode' ) );
 		add_shortcode( 'cookies_revoke', array( $this, 'cookies_revoke_shortcode' ) );
 		add_shortcode( 'cookies_policy_link', array( $this, 'cookies_policy_link_shortcode' ) );
-	}
+		add_shortcode( 'cookies_accept_button', array( $this, 'cookies_accept_button' ) );
+    }
+
+    public function cookies_accept_button($args, $content)
+    {
+        // get options
+        $options = $this->options['general'];
+
+		// defaults
+		$defaults = array(
+            'class'	=> 'cn-button '. ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $options['css_class'] !== '' ? ' ' . $options['css_class'] : '' ),
+            'style' => '',
+		);
+		// combine shortcode arguments
+		$args = shortcode_atts( $defaults, $args );
+        return '<a href="#" id="cn-accept-cookie" data-cookie-set="accept" class="cn-set-cookie ' . $args['class'] . '" ' .
+            'style="' . $args['style'] . '">' . $content .
+        '</a>';
+    }
 
 	/**
 	 * Register cookies accepted shortcode.
@@ -605,14 +625,18 @@ class Cookie_Notice {
 		$defaults = array(
 			'title'	=> esc_html( $options['see_more_opt']['text'] !== '' ? $options['see_more_opt']['text'] : '&#x279c;' ),
 			'link'	=> ( $options['see_more_opt']['link_type'] === 'custom' ? $options['see_more_opt']['link'] : get_permalink( $options['see_more_opt']['id'] ) ),
-			'class'	=> $options['css_class']
+            'class'	=> $options['link_position'] !== 'message' ? $options['css_class'] : '',
+            'style' => ''
 		);
 		
 		// combine shortcode arguments
 		$args = shortcode_atts( $defaults, $args );
-		
-		$shortcode = '<a href="' . $args['link'] . '" target="' . $options['link_target'] . '" id="cn-more-info" class="cn-privacy-policy-link cn-link' . ( $args['class'] !== '' ? ' ' . $args['class'] : '' ) . '">' . esc_html( $args['title'] ) . '</a>';
-		
+
+        $shortcode = '<a href="' . $args['link'] .
+            '" target="' . $options['link_target'] .
+            '" id="cn-more-info" class="cn-privacy-policy-link cn-link' . ( $args['class'] !== '' ? ' ' . $args['class'] : '' ) .
+            '" style="' . $args['style'] . '">' . esc_html( $content ) . '</a>';
+
 		return $shortcode;
 	}
 
@@ -718,6 +742,7 @@ class Cookie_Notice {
 		add_settings_section( 'cookie_notice_configuration', __( 'Configuration', 'cookie-notice' ), array( $this, 'cn_section_configuration' ), 'cookie_notice_options' );
 		add_settings_field( 'cn_message_text', __( 'Message', 'cookie-notice' ), array( $this, 'cn_message_text' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 		add_settings_field( 'cn_accept_text', __( 'Button text', 'cookie-notice' ), array( $this, 'cn_accept_text' ), 'cookie_notice_options', 'cookie_notice_configuration' );
+		add_settings_field( 'cn_accept_text_position', __( 'Button position', 'cookie-notice' ), array( $this, 'cn_accept_text_position' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 		add_settings_field( 'cn_see_more', __( 'Privacy policy', 'cookie-notice' ), array( $this, 'cn_see_more' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 		add_settings_field( 'cn_refuse_opt', __( 'Refuse consent', 'cookie-notice' ), array( $this, 'cn_refuse_opt' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 		add_settings_field( 'cn_revoke_opt', __( 'Revoke consent', 'cookie-notice' ), array( $this, 'cn_revoke_opt' ), 'cookie_notice_options', 'cookie_notice_configuration' );
@@ -742,6 +767,7 @@ class Cookie_Notice {
 		add_settings_field( 'cn_hide_effect', __( 'Animation', 'cookie-notice' ), array( $this, 'cn_hide_effect' ), 'cookie_notice_options', 'cookie_notice_design' );
 		add_settings_field( 'cn_css_style', __( 'Button style', 'cookie-notice' ), array( $this, 'cn_css_style' ), 'cookie_notice_options', 'cookie_notice_design' );
 		add_settings_field( 'cn_css_class', __( 'Button class', 'cookie-notice' ), array( $this, 'cn_css_class' ), 'cookie_notice_options', 'cookie_notice_design' );
+        add_settings_field( 'cn_close_style', __( 'Close button style', 'cookie-notice' ), array( $this, 'cn_close_style' ), 'cookie_notice_options', 'cookie_notice_design' );
 		add_settings_field( 'cn_colors', __( 'Colors', 'cookie-notice' ), array( $this, 'cn_colors' ), 'cookie_notice_options', 'cookie_notice_design' );
 	}
 
@@ -832,8 +858,20 @@ class Cookie_Notice {
 				<input type="text" class="regular-text" name="cookie_notice_options[accept_text]" value="' . esc_attr( $this->options['general']['accept_text'] ) . '" />
 			<p class="description">' . __( 'The text of the option to accept the notice and make it disappear.', 'cookie-notice' ) . '</p>
 			</div>
-		</fieldset>';
-	}
+        </fieldset>';
+    }
+
+    public function cn_accept_text_position()
+    {
+		foreach ( $this->link_positions as $position => $label ) {
+			echo '<label><input id="cn_see_accept_position-'
+                . $position
+                . '" type="radio" name="cookie_notice_options[accept_text_position]" value="' . $position . '" '
+                . checked( $position, $this->options['general']['accept_text_position'], false ) . ' />'
+                . esc_html( $label )
+                . '</label>';
+		}
+    }
 
 	/**
 	 * Enable/Disable third party non functional cookies option.
@@ -1174,6 +1212,20 @@ class Cookie_Notice {
 	}
 
 	/**
+	 * CSS style option.
+	 */
+	public function cn_close_style() {
+		echo '
+		<fieldset>
+			<div id="cn_close_style">
+				<input type="text" class="regular-text" name="cookie_notice_options[close_style]" value="' . esc_attr( $this->options['general']['close_style'] ) . '" />
+				<p class="description">' . __( 'Enter additional button CSS classes separated by spaces.', 'cookie-notice' ) . '</p>
+			</div>
+		</fieldset>';
+    }
+
+
+	/**
 	 * Colors option.
 	 */
 	public function cn_colors() {
@@ -1372,10 +1424,12 @@ class Cookie_Notice {
 			'position'				=> $this->options['general']['position'],
 			'css_style'				=> $this->options['general']['css_style'],
 			'css_class'				=> $this->options['general']['css_class'],
+			'close_style'			=> $this->options['general']['close_style'],
 			'button_class'			=> 'cn-button',
 			'colors'				=> $this->options['general']['colors'],
 			'message_text'			=> $this->options['general']['message_text'],
-			'accept_text'			=> $this->options['general']['accept_text'],
+            'accept_text'			=> $this->options['general']['accept_text'],
+            'accept_text_position'  => $this->options['general']['accept_text_position'],
 			'refuse_text'			=> $this->options['general']['refuse_text'],
 			'revoke_message_text'	=> $this->options['general']['revoke_message_text'],
 			'revoke_text'			=> $this->options['general']['revoke_text'],
@@ -1404,12 +1458,19 @@ class Cookie_Notice {
 		<div id="cookie-notice" role="banner" class="cookie-notice-hidden cookie-revoke-hidden cn-position-' . $options['position'] . '" aria-label="' . $options['aria_label'] . '" style="background-color: rgba(' . implode( ',', $this->hex2rgb( $options['colors']['bar'] ) ) . ',' . $options['colors']['bar_opacity'] * 0.01 . ');">'
 			. '<div class="cookie-notice-container" style="color: ' . $options['colors']['text'] . ';">'
 			. '<span id="cn-notice-text" class="cn-text-container">'. $options['message_text'] . '</span>'
-			. '<span id="cn-notice-buttons" class="cn-buttons-container"><a href="#" id="cn-accept-cookie" data-cookie-set="accept" class="cn-set-cookie ' . $options['button_class'] . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $options['css_class'] !== '' ? ' ' . $options['css_class'] : '' ) . '">' . $options['accept_text'] . '</a>'
+            . '<span id="cn-notice-buttons" class="cn-buttons-container">'
+            . ($options['accept_text_position'] === 'banner' ?
+                '<a href="#" id="cn-accept-cookie" data-cookie-set="accept" class="cn-set-cookie '
+                . $options['button_class']
+                . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' )
+                . ( $options['css_class'] !== '' ? ' ' . $options['css_class'] : '' ) . '">'
+                . $options['accept_text']
+                . '</a>' : '')
 			. ( $options['refuse_opt'] === true ? '<a href="#" id="cn-refuse-cookie" data-cookie-set="refuse" class="cn-set-cookie ' . $options['button_class'] . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $options['css_class'] !== '' ? ' ' . $options['css_class'] : '' ) . '">' . $options['refuse_text'] . '</a>' : '' )
-			. ( $options['see_more'] === true && $options['link_position'] === 'banner' ? '<a href="' . ( $options['see_more_opt']['link_type'] === 'custom' ? $options['see_more_opt']['link'] : get_permalink( $options['see_more_opt']['id'] ) ) . '" target="' . $options['link_target'] . '" id="cn-more-info" class="cn-more-info ' . $options['button_class'] . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $options['css_class'] !== '' ? ' ' . $options['css_class'] : '' ) . '">' . $options['see_more_opt']['text'] . '</a>' : '' ) 
-			. '</span><a href="javascript:void(0);" id="cn-close-notice" data-cookie-set="accept" class="cn-close-icon"></a>'
+			. ( $options['see_more'] === true && $options['link_position'] === 'banner' ? '<a href="' . ( $options['see_more_opt']['link_type'] === 'custom' ? $options['see_more_opt']['link'] : get_permalink( $options['see_more_opt']['id'] ) ) . '" target="' . $options['link_target'] . '" id="cn-more-info" class="cn-more-info ' . $options['button_class'] . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $options['css_class'] !== '' ? ' ' . $options['css_class'] : '' ) . '">' . $options['see_more_opt']['text'] . '</a>' : '' )
+			. '</span><a href="javascript:void(0);" id="cn-close-notice" data-cookie-set="accept" class="cn-close-icon"' . (isset($options['close_style']) ? 'style="' . $options['close_style'] . '"' : '') . '></a>'
 			. '</div>
-			' . ( $options['refuse_opt'] === true && $options['revoke_cookies'] == true ? 
+			' . ( $options['refuse_opt'] === true && $options['revoke_cookies'] == true ?
 			'<div class="cookie-revoke-container" style="color: ' . $options['colors']['text'] . ';">'
 			. ( ! empty( $options['revoke_message_text'] ) ? '<span id="cn-revoke-text" class="cn-text-container">'. $options['revoke_message_text'] . '</span>' : '' )
 			. '<span id="cn-revoke-buttons" class="cn-buttons-container"><a href="#" class="cn-revoke-cookie ' . $options['button_class'] . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $options['css_class'] !== '' ? ' ' . $options['css_class'] : '' ) . '">' . esc_html( $options['revoke_text'] ) . '</a></span>
