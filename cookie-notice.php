@@ -1630,7 +1630,7 @@ class Cookie_Notice {
 		);
 
 		wp_enqueue_style( 'wp-color-picker' );
-        wp_enqueue_style( 'cookie-notice-admin', plugins_url( 'css/admin' . ( ! ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '.min' : '' ) . '.css', __FILE__ ), 'bg.1.1' );
+        wp_enqueue_style( 'cookie-notice-admin', plugins_url( 'css/admin' . ( ! ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '.min' : '' ) . '.css', __FILE__ ), [], '1.2' );
 	}
 
 	/**
