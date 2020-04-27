@@ -83,7 +83,7 @@
 .cn-close-icon:hover {
 	opacity: 1;
 }
-.cn-close-icon:before, 
+.cn-close-icon:before,
 .cn-close-icon:after {
 	position: absolute;
 	content: ' ';
@@ -163,7 +163,6 @@
 	margin: 0 0 6px 0;
 }
 
-.cn-text-container,
 .cn-buttons-container {
 	display: inline-block;
 }
